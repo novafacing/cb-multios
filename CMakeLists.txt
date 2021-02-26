@@ -7,6 +7,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Needed for newer challenges
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 11)
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    add_definitions(-D B64)
+else(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    add_definitions(-D B32)
+endif()
 
 if(WIN32)
     # Need to use MASM on windows
@@ -58,12 +63,11 @@ else(WIN32)
         -fcommon
         -w
         -g3
-        -m32
     )
 
     # Link everything 32-bit (until we have a 64-bit option)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -m32")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -m32")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS}")
 
     # Linker options
     # Dynamic by default

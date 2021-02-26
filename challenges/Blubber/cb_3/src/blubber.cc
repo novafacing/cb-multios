@@ -20,95 +20,86 @@
  * THE SOFTWARE.
  *
  */
-#include "cgc_cstring.h"
 #include "cgc_cstdlib.h"
+#include "cgc_cstring.h"
 
 #include "cgc_blubber.h"
 #include "cgc_constants.h"
+#include "cgc_rand.h"
 #include "cgc_time.h"
 #include "cgc_vector.h"
-#include "cgc_rand.h"
 #include "cgc_words.h"
 
-blub::blub(char* _author, char* data)
-{
-  id = (uint32_t)this;
+blub::blub(char *_author, char *data) {
 
-  cgc_size_t l = cgc_strlen(_author);
-  cgc_strncpy(username, _author, l);
+#ifdef B64
+    id = (uint64_t)this;
+#endif
 
-  cgc_memcpy(content, data, BLUB_MAX);
+#ifdef B32
+    id = (uint32_t)this;
+#endif
 
-  ts = tick();
+    cgc_size_t l = cgc_strlen(_author);
+    cgc_strncpy(username, _author, l);
+
+    cgc_memcpy(content, data, BLUB_MAX);
+
+    ts = tick();
 }
 
-blubber::blubber(void)
-{
-  last_read = 0;
+blubber::blubber(void) {
+    last_read = 0;
 }
 
-void blubber::set_username(char* _username)
-{
-  cgc_strcpy(username, _username);
+void blubber::set_username(char *_username) {
+    cgc_strcpy(username, _username);
 }
 
-blub* blubber::gen_blub(void)
-{
-  char buf[BLUB_MAX + 1];
-  cgc_size_t rem = BLUB_MAX;
-  int misses = 0;
+blub *blubber::gen_blub(void) {
+    char buf[BLUB_MAX + 1];
+    cgc_size_t rem = BLUB_MAX;
+    int misses = 0;
 
-  cgc_memset(buf, 0, BLUB_MAX + 1);
+    cgc_memset(buf, 0, BLUB_MAX + 1);
 
-  while (0 < rem && misses < 8)
-  {
-    const char* word = words[choice() % (sizeof(words) / sizeof(char *))];
-    if (cgc_strlen(word) + cgc_strlen(" ") <= rem)
-    {
-      cgc_size_t offset = cgc_strlen(buf);
-      if (offset > 0)
-      {
-        cgc_strcpy(buf + offset, " ");
-        cgc_strcpy(buf + offset + 1, word);
-      }
-      else
-      {
-        cgc_strcpy(buf + offset, word);
-      }
+    while (0 < rem && misses < 8) {
+        const char *word = words[choice() % (sizeof(words) / sizeof(char *))];
+        if (cgc_strlen(word) + cgc_strlen(" ") <= rem) {
+            cgc_size_t offset = cgc_strlen(buf);
+            if (offset > 0) {
+                cgc_strcpy(buf + offset, " ");
+                cgc_strcpy(buf + offset + 1, word);
+            } else {
+                cgc_strcpy(buf + offset, word);
+            }
 
-      rem = BLUB_MAX - cgc_strlen(buf);
+            rem = BLUB_MAX - cgc_strlen(buf);
+        } else {
+            misses++;
+        }
     }
-    else
-    {
-      misses++;
+
+    buf[BLUB_MAX] = '\0';
+
+    blub *n = record_blub(buf);
+    return n;
+}
+
+void blubber::subscribe(blubber *b) {
+    if (!subs.contains(b)) {
+        subs.add(b);
     }
-  }
-
-  buf[BLUB_MAX] = '\0';
-
-  blub* n = record_blub(buf);
-  return n;
 }
 
-void blubber::subscribe(blubber* b)
-{
-  if (!subs.contains(b))
-  {
-    subs.add(b);
-  }
+void blubber::unsubscribe(blubber *b) {
+    if (subs.contains(b)) {
+        subs.remove(subs.index_of(b));
+    }
 }
 
-void blubber::unsubscribe(blubber* b)
-{
-  if (subs.contains(b))
-  {
-    subs.remove(subs.index_of(b));
-  }
-}
-
-blub* blubber::record_blub(char* buf)
-{
-  blub* n = new blub(username, buf);
-  blubs.add(n);
-  return n;
+blub *blubber::record_blub(char *buf) {
+    blub *n = new blub(username, buf);
+    blubs.add(n);
+    return n;
 }

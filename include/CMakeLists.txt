@@ -9,7 +9,7 @@ endif()
 
 add_library(cgc SHARED ${cgc_src} ansi_x931_aes128.c)
 target_include_directories(cgc PUBLIC tiny-AES128-C .)
-target_link_libraries(cgc LINK_PUBLIC tiny-AES128-C)
+target_link_libraries(cgc LINK_PUBLIC tiny-AES128-C m)
 
 # Build tiny-AES128-C
 add_subdirectory(tiny-AES128-C)

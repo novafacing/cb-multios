@@ -20,25 +20,14 @@
  * THE SOFTWARE.
  *
  */
+#include <cgc_stdint.h>
 #pragma once
 
-enum
-{
-    OPR_invalid,
-    OPR_reg,
-    OPR_mem,
-    OPR_imm
-};
+enum { OPR_invalid, OPR_reg, OPR_mem, OPR_imm };
 
-enum
-{
-    REG_invalid = -1,
-    REG_sp = 4,
-    REG__count = 8
-};
+enum { REG_invalid = -1, REG_sp = 4, REG__count = 8 };
 
-enum
-{
+enum {
     INS_invalid,
     INS_nop,
     INS_add,
@@ -66,26 +55,24 @@ enum
     INS_popf
 };
 
-class Operand
-{
-public:
-    Operand() : d_type(OPR_invalid) {}
-    Operand(int type) : d_type(type) {}
-    
-    static inline Operand new_imm(int imm)
-    {
+class Operand {
+  public:
+    Operand() : d_type(OPR_invalid) {
+    }
+    Operand(int64_t type) : d_type(type) {
+    }
+
+    static inline Operand new_imm(int64_t imm) {
         Operand opr(OPR_imm);
         opr.d_imm = imm;
         return opr;
     }
-    static inline Operand new_reg(int reg)
-    {
+    static inline Operand new_reg(int64_t reg) {
         Operand opr(OPR_reg);
         opr.d_reg = reg;
         return opr;
     }
-    static inline Operand new_mem(int base, int disp)
-    {
+    static inline Operand new_mem(int64_t base, int64_t disp) {
         Operand opr(OPR_mem);
         opr.d_mem.d_base = base;
         opr.d_mem.d_disp = disp;
@@ -93,34 +80,41 @@ public:
         opr.d_mem.d_scale = 0;
         return opr;
     }
-    
-    inline bool is_valid() { return d_type != OPR_invalid; }
-public:
-    int d_type;
+
+    inline bool is_valid() {
+        return d_type != OPR_invalid;
+    }
+
+  public:
+    int64_t d_type;
     union {
-        int d_reg;
-        int d_imm;
+        int64_t d_reg;
+        int64_t d_imm;
         struct {
-            int d_base;
-            int d_disp;
-            int d_index;
-            int d_scale;
+            int64_t d_base;
+            int64_t d_disp;
+            int64_t d_index;
+            int64_t d_scale;
         } d_mem;
     };
 };
 
-class Instruction
-{
-public:
-    Instruction() : d_type(INS_invalid), d_size(0) {}
-    Instruction(int type, int size) : d_type(type), d_size(size) {}
+class Instruction {
+  public:
+    Instruction() : d_type(INS_invalid), d_size(0) {
+    }
+    Instruction(int64_t type, int64_t size) : d_type(type), d_size(size) {
+    }
 
-    static Instruction disassemble(unsigned char *data, unsigned int len);
+    static Instruction disassemble(unsigned char *data, uint32_t len);
 
-    inline bool is_valid() { return d_type != INS_invalid; }
-private:
-public:
-    int d_type;
-    int d_size;
+    inline bool is_valid() {
+        return d_type != INS_invalid;
+    }
+
+  private:
+  public:
+    int64_t d_type;
+    int64_t d_size;
     Operand d_operands[3];
 };

@@ -24,84 +24,74 @@
 
 #include "cgc_instruction.h"
 
-
-class Emulator
-{
-private:
-    inline bool in_stack(int mem)
-    {
+class Emulator {
+  private:
+    inline bool in_stack(int64_t mem) {
 #ifdef PATCHED_1
         if ((unsigned char *)mem < d_stack)
             return false;
 #endif
         return (unsigned char *)mem - d_stack < STACK_SIZE;
     }
-    inline bool in_heap(int mem)
-    {
+    inline bool in_heap(int64_t mem) {
         return (mem >> 30) == 0;
     }
-    inline unsigned char *heap_addr(int mem)
-    {
+    inline unsigned char *heap_addr(int64_t mem) {
         return mem + d_heap;
     }
-    inline unsigned int heap_length(int mem)
-    {
+    inline uint32_t heap_length(int64_t mem) {
         if (!in_heap(mem))
             return 0;
         return 0x40000000 - mem;
     }
-    inline void set_operand(const Operand &opr, int value, bool carry, bool do_flags)
-    {
+    inline void set_operand(const Operand &opr, int64_t value, bool carry,
+                            bool do_flags) {
         if (do_flags)
             set_flags(value, carry);
         set_operand(opr, value);
     }
-    inline void set_flags(int value, bool carry)
-    {
+    inline void set_flags(int64_t value, bool carry) {
         d_zf = value == 0;
         d_cf = carry;
     }
 
-public:
+  public:
     Emulator(void *sp, void *heap);
     ~Emulator();
 
     void reset();
-    void set_ip(int ip);
+    void set_ip(int64_t ip);
     bool step();
     void print_state();
-    int get_operand_mem(const Operand &opr);
-    int get_operand(const Operand &opr);
-    void set_operand(const Operand &opr, int value);
-    const Instruction &last_instruction()
-    {
+    int64_t get_operand_mem(const Operand &opr);
+    int64_t get_operand(const Operand &opr);
+    void set_operand(const Operand &opr, int64_t value);
+    const Instruction &last_instruction() {
         return d_instruction;
     }
-    template <typename F>
-    void traverse_dirty(F f)
-    {
-        for (unsigned int i = 0; i < sizeof(d_dirty_pages); i++)
-        {
-            if (d_dirty_pages[i] == 0) continue;
-            for (unsigned int j = 0; j < 8; j++)
-            {
+    template <typename F> void traverse_dirty(F f) {
+        for (uint32_t i = 0; i < sizeof(d_dirty_pages); i++) {
+            if (d_dirty_pages[i] == 0)
+                continue;
+            for (uint32_t j = 0; j < 8; j++) {
                 if (d_dirty_pages[i] & (1 << j))
                     f((i * 8 + j) * 0x1000);
             }
         }
     }
 
-    static const int HEAP_SIZE = 0x40000000;
-    static const int STACK_SIZE = 65536;
-private:
+    static const int64_t HEAP_SIZE = 0x40000000;
+    static const int64_t STACK_SIZE = 65536;
+
+  private:
     bool d_fault;
     unsigned char *d_stack;
     unsigned char *d_heap;
     unsigned char d_dirty_pages[HEAP_SIZE / 0x8000];
 
-    int d_reg[REG__count];
-    int d_ip;
-    unsigned int d_zf : 1;
-    unsigned int d_cf : 1;
+    int64_t d_reg[REG__count];
+    int64_t d_ip;
+    uint32_t d_zf : 1;
+    uint32_t d_cf : 1;
     Instruction d_instruction;
 };
