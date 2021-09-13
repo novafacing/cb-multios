@@ -231,3 +231,6 @@ message(STATUS "Adding library directory ${CMAKE_CURRENT_SOURCE_DIR}/lib_include
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/lib_include")
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/lib_include")
 
+set( cb_path ${CMAKE_CURRENT_SOURCE_DIR} )
+get_filename_component( cb_id ${cb_path} NAME )
+
