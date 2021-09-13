@@ -31,12 +31,9 @@ if(WIN32)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MACHINE:X86 /NXCOMPAT:NO /SAFESEH:NO /DYNAMICBASE:NO")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MACHINE:X86")
 
-    # Read in challenges to exclude from build
     if(CLANGCL)
-        file(STRINGS "exclude/win_clangcl.txt" cb_exclude)
         add_definitions(-DCLANGCL)
     else()
-        file(STRINGS "exclude/win_msvc.txt" cb_exclude)
         add_definitions(-DWIN)
     endif()
 else(WIN32)
@@ -47,14 +44,10 @@ else(WIN32)
         set(LINUX TRUE)
         add_definitions(-DLINUX)
 
-        # Read in challenges to exclude from build
-        file(STRINGS "exclude/linux.txt" cb_exclude)
     endif()
     if(APPLE)
         add_definitions(-DAPPLE)
 
-        # Read in challenges to exclude from build
-        file(STRINGS "exclude/osx.txt" cb_exclude)
     endif()
 
     # Default flags for everything
@@ -79,9 +72,6 @@ else(WIN32)
     endif()
 endif(WIN32)
 
-# Build all libraries
-include_directories(include)
-add_subdirectory(include)
 
 function(build path target)
     message(STATUS "Building ${target}")
@@ -197,12 +187,13 @@ function(buildSO)
 
         set(LIB_NAME ${AUTHOR_ID}_${SERVICE_ID})
         if(BUILD_STATIC_LIBS)
-            set(LIB_CGC "${PROJECT_BINARY_DIR}/include/libcgc.a")
+            set(LIB_CGC "${CMAKE_CURRENT_BINARY_DIR}/lib_include/libcgc.a")
         else()
             if(APPLE)
-                set(LIB_CGC "${PROJECT_BINARY_DIR}/include/libcgc.dylib")
+                set(LIB_CGC "${CMAKE_CURRENT_BINARY_DIR}/lib_include/libcgc.dylib")
             else()
-                set(LIB_CGC "${PROJECT_BINARY_DIR}/include/libcgc.so")
+                set(LIB_CGC "${CMAKE_CURRENT_BINARY_DIR}/lib_include/libcgc.so")
+                message(STATUS "Building libcgc.so from ${LIB_CGC}")
             endif()
         endif()
 
@@ -236,18 +227,7 @@ if(LINUX)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -z execstack -z norelro")
 endif()
 
-file(GLOB challenge_binaries challenges/*)
-foreach(cb_path ${challenge_binaries})
-    if(IS_DIRECTORY ${cb_path} AND EXISTS ${cb_path}/CMakeLists.txt)
-        # Get filename
-        get_filename_component(cb_id ${cb_path} NAME)
+message(STATUS "Adding library directory ${CMAKE_CURRENT_SOURCE_DIR}/lib_include")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/lib_include")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/lib_include")
 
-        # Skip the challenge if it's in the exclude list
-        list(FIND cb_exclude ${cb_id} idx)
-        if(${idx} EQUAL -1)
-            add_subdirectory(${cb_path})
-        else()
-            message(STATUS "EXCLUDE: ${cb_id}")
-        endif()
-    endif()
-endforeach()
